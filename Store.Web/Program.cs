@@ -4,6 +4,8 @@ using Store.Data.Contexts;
 using Store.Repositry;
 using Store.Repositry.Interfaces;
 using Store.Repositry.Repositries;
+using Store.Service.Services.ProductServices;
+using Store.Service.Services.ProductServices.Dtos;
 using Store.Web.Helper;
 
 namespace Store.Web
@@ -21,7 +23,11 @@ namespace Store.Web
             { options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")); });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddScoped<IUnitOfWork,UnitOfWork>(); 
+            builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
+            builder.Services.AddScoped<IProductService,ProductService>();
+
+            builder.Services.AddAutoMapper(typeof(ProductProfile));
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -38,9 +44,10 @@ namespace Store.Web
 
             app.UseHttpsRedirection();
 
+
             app.UseAuthorization();
 
-
+            app.UseStaticFiles();
             app.MapControllers();
 
             app.Run();

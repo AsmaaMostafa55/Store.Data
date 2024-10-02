@@ -15,10 +15,17 @@ namespace Store.Repositry.Specification.ProductSpecs
         private const int MAXPAGESIZE = 50;
         private int _PageSize = 6;
         public int PageSize
-            {
-            get=> _PageSize;
-    set => _PageSize = (value>MAXPAGESIZE)?int.MaxValue:value;
+        {
+            get => _PageSize;
+            set => _PageSize = (value > MAXPAGESIZE) ? int.MaxValue : value;
 
+        }
+        private string? _search ;
+            public string? search 
+            {
+            get=> _search; 
+    set=> _search = value?.Trim().ToLower();
 }
+
     }
 }

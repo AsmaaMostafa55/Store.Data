@@ -1,12 +1,17 @@
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using Store.Data.Contexts;
 using Store.Repositry;
 using Store.Repositry.Interfaces;
 using Store.Repositry.Repositries;
+using Store.Service.HandleResponses;
 using Store.Service.Services.ProductServices;
 using Store.Service.Services.ProductServices.Dtos;
+using Store.Web.Extentions;
 using Store.Web.Helper;
+using Store.Web.Middlewares;
 
 namespace Store.Web
 {
@@ -17,21 +22,22 @@ namespace Store.Web
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
             builder.Services.AddControllers();
             builder.Services.AddDbContext<StoreDbContext>(options =>
             { options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")); });
 
+
+            builder.Services.AddSingleton<IConnectionMultiplexer>(config =>
+            {
+                var configurations = ConfigurationOptions.Parse(builder.Configuration.GetConnectionString("Redis");
+                return ConnectionMultiplexer.Connect(configurations);
+            });
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
-            builder.Services.AddScoped<IProductService,ProductService>();
 
-            builder.Services.AddAutoMapper(typeof(ProductProfile));
-
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-
+            builder.Services.AddApplicationServices();
             var app = builder.Build();
             await ApplySeeding.ApplySeedingAsync(app);
            
@@ -41,13 +47,14 @@ namespace Store.Web
                     app.UseSwagger();
                     app.UseSwaggerUI();
                 }
+            app.UseMiddleware<ExceptionMiddleWare>();
 
             app.UseHttpsRedirection();
 
-
+            app.UseStaticFiles();
             app.UseAuthorization();
 
-            app.UseStaticFiles();
+           
             app.MapControllers();
 
             app.Run();

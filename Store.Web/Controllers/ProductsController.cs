@@ -2,6 +2,7 @@
 using Store.Repositry.Specification.ProductSpecs;
 using Store.Service.Services.ProductServices;
 using Store.Service.Services.ProductServices.Dtos;
+using Store.Web.Helper;
 
 namespace Store.Web.Controllers
 {
@@ -18,7 +19,8 @@ namespace Store.Web.Controllers
         [HttpGet]
         
         public async Task<ActionResult< IReadOnlyList<BrandTypeDetailsDto>>>GetAllBrands()
-            =>Ok(  await _productService.GetAllBrandssAsync());
+            =>Ok(   await _productService.GetAllBrandssAsync());
+
 
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<BrandTypeDetailsDto>>> GetAllTypes()
@@ -26,12 +28,14 @@ namespace Store.Web.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<ProductDetailsDto>>> GetAllProducts([FromQuery]ProductSpecification input)
-          => Ok(await _productService.GetAllProductsAsync(input));
+        [Cache(10)]
+        public async Task<ActionResult<IReadOnlyList<ProductDetailsDto>>> GetAllProducts([FromQuery] ProductSpecification input)
+            => Ok(await _productService.GetAllProductsAsync(input));
+        
 
         [HttpGet]
         public async Task<ActionResult<ProductDetailsDto>> GetProductById(int? id)
-         => Ok(await _productService.GetProductByIdASync(id));
+          => Ok(await _productService.GetProductByIdASync(id));
 
     }
 }

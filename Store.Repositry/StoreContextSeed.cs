@@ -43,6 +43,20 @@ namespace Store.Repositry
                         await context.Products.AddRangeAsync(products);
                     }
                 }
+
+
+
+                if (context.DeliveryMethods != null && !context.DeliveryMethods.Any())
+                {
+                    //presist To database
+                    var DeliveryMethodsData = File.ReadAllText("../Store.Repository/SeedData-20240924T205710Z-001/SeedData/delivery.json");
+                    var DeliveryMethods = JsonSerializer.Deserialize<List<DeliveryMethod>>(DeliveryMethodsData);
+                    if (DeliveryMethods is not null)
+                    {
+                        await context.DeliveryMethods.AddRangeAsync(DeliveryMethods);
+                    }
+                }
+
                 await context.SaveChangesAsync();
 
 

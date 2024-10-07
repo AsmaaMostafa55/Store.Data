@@ -22,6 +22,9 @@ namespace Store.Service.Services.CacheService
         {
             if (response is null)
                 return;
+           
+
+
             var options = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase

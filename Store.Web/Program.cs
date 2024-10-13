@@ -42,10 +42,11 @@ namespace Store.Web
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
-            builder.Services.AddIdentityServices();
+            builder.Services.AddIdentityServices(builder.Configuration);
 
             builder.Services.AddControllers();
 
+            builder.Services.AddSwagerDocumentation();
 
             var app = builder.Build();
             await ApplySeeding.ApplySeedingAsync(app);

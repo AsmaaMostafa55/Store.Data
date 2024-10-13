@@ -14,5 +14,8 @@ namespace Store.Service.Services.BasketService.Dtos
         public decimal ShippingPrice { get; set; }
 
         public List<BasketItemDto> BasketItems { get; set; } = new List<BasketItemDto>();
+
+        public string?ClientSecret { get; set; }
+        public string? PaymentMethodid { get;set; }
     }
 }

@@ -1,6 +1,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using Store.Data.Contexts;
 using Store.Repositry;
@@ -47,7 +48,14 @@ namespace Store.Web
             builder.Services.AddControllers();
 
             builder.Services.AddSwagerDocumentation();
+            builder.Services.AddCors(Options=>
+            {
+                Options.AddPolicy("CorsPolicy",Policy=>
+                {
+                    Policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http:localhost:4200", "http://localhost:4200","http://localhost:26296");
+                });
 
+            });
             var app = builder.Build();
             await ApplySeeding.ApplySeedingAsync(app);
            
@@ -62,6 +70,7 @@ namespace Store.Web
             app.UseHttpsRedirection();
 
             app.UseStaticFiles();
+            app.UseCors("CorsPolicy");
             app.UseAuthorization();
             app.UseAuthorization();
            

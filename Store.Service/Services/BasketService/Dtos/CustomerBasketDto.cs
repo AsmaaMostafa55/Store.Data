@@ -16,6 +16,8 @@ namespace Store.Service.Services.BasketService.Dtos
         public List<BasketItemDto> BasketItems { get; set; } = new List<BasketItemDto>();
 
         public string?ClientSecret { get; set; }
-        public string? PaymentMethodid { get;set; }
+        public string? PaymentIntentId { get;set; }
+
+
     }
 }

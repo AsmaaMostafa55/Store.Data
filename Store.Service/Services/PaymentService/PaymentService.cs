@@ -1,7 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
+using StackExchange.Redis;
 using Store.Data.Entities;
+using Store.Data.Entities.OrderEntites;
 using Store.Repositry.Basket.Models;
 using Store.Repositry.Interfaces;
+using Store.Repositry.Specification.OrderSpecs;
 using Store.Service.OrderService.Dtos;
 using Store.Service.Services.BasketService;
 using Store.Service.Services.BasketService.Dtos;
@@ -20,12 +24,14 @@ namespace Store.Service.Services.PaymentService
         private readonly IConfiguration _configuration;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IBasketService _basketService;
+        private readonly IMapper _mapper;
 
-        public PaymentService(IConfiguration  configuration,IUnitOfWork unitOfWork,IBasketService basketService)
+        public PaymentService(IConfiguration  configuration,IUnitOfWork unitOfWork,IBasketService basketService,IMapper mapper)
         {
             _configuration = configuration;
             _unitOfWork = unitOfWork;
             _basketService = basketService;
+           _mapper = mapper;
         }
 
 
@@ -67,7 +73,8 @@ namespace Store.Service.Services.PaymentService
             {
                 var options = new PaymentIntentUpdateOptions
                 {
-                    Amount = (long)input.BasketItems.Sum(item => item.Quantity * (item.Price * 100)) + (long)(ShippingPrice * 100)
+                    Amount = (long)input.BasketItems.Sum(item => item.Quantity * (item.Price * 100)) + (long)(ShippingPrice * 100),
+                    
                    
                 };
                 await service.UpdateAsync(input.PaymentIntentId,options
@@ -78,14 +85,35 @@ namespace Store.Service.Services.PaymentService
             return input;
         }
 
-        public Task<OrderDetailsDto> UpdateOrderPaymentFailed(string PaymentIntentId)
+        public async Task<OrderDetailsDto> UpdateOrderPaymentFailed(string PaymentIntentId)
         {
-            throw new NotImplementedException();
+            var specs = new OrderWithPaymentIntentSpecification(PaymentIntentId);
+            var order = await _unitOfWork.Repositry<Data.Entities.OrderEntites.Order, Guid>().GetWithSpecificationByIdAsync(specs);
+            if (order == null)
+                throw new Exception("Order Does not Exist");
+
+            order.OrderPaymentStatus = orderPaymentStatus.Failed;
+            _unitOfWork.Repositry<Data.Entities.OrderEntites.Order, Guid>().Update(order);
+            await _unitOfWork.CompleteAsync();
+            var mappedOrder =_mapper.Map<OrderDetailsDto>(order);
+            return mappedOrder;
+
+            
         }
 
-        public Task<OrderDetailsDto> UpdateOrderPaymentSucceeded(string PaymentIntentId)
+        public async Task<OrderDetailsDto> UpdateOrderPaymentSucceeded(string PaymentIntentId)
         {
-            throw new NotImplementedException();
+            var specs = new OrderWithPaymentIntentSpecification(PaymentIntentId);
+            var order = await _unitOfWork.Repositry<Data.Entities.OrderEntites.Order, Guid>().GetWithSpecificationByIdAsync(specs);
+            if (order == null)
+                throw new Exception("Order Does not Exist");
+
+            order.OrderPaymentStatus = orderPaymentStatus.Received;
+            _unitOfWork.Repositry<Data.Entities.OrderEntites.Order, Guid>().Update(order);
+            await _unitOfWork.CompleteAsync();
+            await _basketService.DeleteBasketAsync(order.BasketId);
+            var mappedOrder = _mapper.Map<OrderDetailsDto>(order);
+            return mappedOrder;
         }
     }
 }

@@ -11,6 +11,7 @@ using Store.Repositry.Basket;
 using Store.Service.Services.TokenService;
 using Store.Service.Services.UserService;
 using Store.Service.OrderService.Dtos;
+using Store.Service.Services.PaymentService;
 
 namespace Store.Web.Extentions
 {
@@ -27,6 +28,7 @@ namespace Store.Web.Extentions
             services.AddScoped<IUserService,IUserService>();
 
             services.AddScoped<IOrderService,OrderService>();
+            services.AddScoped<IPaymentService,PaymentService>();
 
             services.AddScoped<IBasketRepositry, Basketrepositry>();
             services.AddAutoMapper(typeof(ProductProfile));

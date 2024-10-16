@@ -4,11 +4,9 @@ using Store.Data.Entities.OrderEntites;
 using Store.Repositry.Interfaces;
 using Store.Repositry.Specification.OrderSpecs;
 using Store.Service.Services.BasketService;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Store.Service.Services.PaymentService;
+using Stripe;
+using Product = Store.Data.Entities.Product;
 
 namespace Store.Service.OrderService.Dtos
 {
@@ -17,13 +15,16 @@ namespace Store.Service.OrderService.Dtos
         private readonly IBasketService _basketService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IPaymentService _paymentService;
 
-        public OrderService(IBasketService basketService,IUnitOfWork unitOfWork,IMapper mapper
+        public OrderService(IBasketService basketService,IUnitOfWork unitOfWork,IMapper mapper,
+            IPaymentService paymentService
             )
         {
             _basketService = basketService;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _paymentService = paymentService;
         }
 
         public async Task<OrderDetailsDto> CreateOrderAsyn(orderDto input)
@@ -81,6 +82,14 @@ namespace Store.Service.OrderService.Dtos
             #endregion
 
             #region to do =>Payment
+            var specs = new OrderWithPaymentIntentSpecification(basket.PaymentIntentId);
+            var existingOrder = await _unitOfWork.Repositry<Data.Entities.OrderEntites.Order, Guid>().GetWithSpecificationByIdAsync(specs);
+            if (existingOrder == null)
+            {
+                await _paymentService.CreateOrUpdatePaymentIntent(basket);
+            }
+
+
 
             #endregion
             #region create order
@@ -94,6 +103,7 @@ namespace Store.Service.OrderService.Dtos
                 BasketId=input.BasketId,
                 OrderItems=mappedOrderitems,
                 SubTotal=subtotal,
+                PaymentIntentId=basket.PaymentIntentId,
 
 
             };
@@ -120,11 +130,13 @@ namespace Store.Service.OrderService.Dtos
 
             if (!orders.Any())
                 throw new Exception("You Do not have any Orders Yet!");
+            if(orders is { Count<0})
+                throw new Exception("Current userdoes not have any orders yet")
             var mappedOrders = _mapper.Map<List<OrderDetailsDto>>(orders);
             return mappedOrders;
         }
 
-        public async Task<OrderDetailsDto> GetOrderByIdAsync(Guid id)
+        public async Task<OrderDetailsDto> GetOrderByIdAsync(Guid id,string buyerEmail)
         {
             var specs = new OrderWithitemSpecification(id);
 
